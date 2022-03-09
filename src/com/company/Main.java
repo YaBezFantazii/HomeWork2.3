@@ -9,12 +9,12 @@ public class Main {
 
     public static void main(String[] args) {
 
+        String NickName1, NickName2;
         Scanner console = new Scanner(System.in);
         String[] FieldGame;
         String CheckNew = "";
         String Player;
         Boolean CheckWin;
-        Date date;
         int number, DeadHeat;
         //Массив с результатами игр. Элементами массива являются объекты класса Logs.
         ArrayList<Logs> GameList = new ArrayList<>();
@@ -28,7 +28,13 @@ public class Main {
         System.out.println("Запись результатов файл происходит после полного завершения игр через команду 'n' в консоли.\n" +
                 "Так же команда 'r' в консоли приводит к архивации старого рейтинга (перезаписи его в другой файл и \n" +
                 "удалению текущего рейтинга\n");
-
+        // Вводим имя игроков.
+        System.out.println("Введите имя 1 игрока");
+        NickName1 = console.nextLine();
+        System.out.println("Введите имя 2 игрока");
+        NickName2 = console.nextLine();
+        GameList.add(new Logs(NickName1,0,0,0));
+        GameList.add(new Logs(NickName2,0,0,0));
 
         // Проверка на то, хотим ли мы начать новую игру(y), закончить (n) или архивировать и обнулить рейтинг (r)
         while (!CheckNew.equals("n")){
@@ -45,7 +51,13 @@ public class Main {
                 CheckWin = false;
                 // Играем
                 while (!CheckWin) {
-                    System.out.println("Введите число, куда хотите поставить " + Player);
+
+                    if (Player.equals("X")){
+                        System.out.println("Ходит игрок "+NickName1+". Введите число, куда хотите поставить " + Player);
+                    } else {
+                        System.out.println("Ходит игрок "+NickName2+". Введите число, куда хотите поставить " + Player);
+                    }
+
                     number = console.nextInt()-1;
 
                     // Проверка на корректность введенного числа и заполнености ячейки
@@ -67,27 +79,39 @@ public class Main {
                     }
                     // Пишем как закончилась игра, и добавляем новый элемент с результатом в массив GameList для дальнейшей записи в файл
                     if (CheckWin & Player.equals("0")) {
-                        System.out.println("!!!Победил игрок 1 (Х)!!!\n");
-                        GameList.add(new Logs(0,PrintField(FieldGame),date = new Date()));
+                        System.out.println("!!!Победил игрок "+NickName1+"!!!\n");
+                        GameList.get(0).setWin( GameList.get(0).getWin()+1 );
+                        GameList.get(1).setLose( GameList.get(1).getLose()+1 );
                     } else if (CheckWin & Player.equals("X")) {
-                        System.out.println("!!!Победил игрок 2 (0)!!!\n");
-                        GameList.add(new Logs(1,PrintField(FieldGame),date = new Date()));
+                        System.out.println("!!!Победил игрок "+NickName2+"!!!\n");
+                        GameList.get(0).setLose( GameList.get(0).getLose()+1 );
+                        GameList.get(1).setWin( GameList.get(1).getWin()+1 );
                     } else if (DeadHeat>8) {
                         System.out.println("!!!Ничья!!!\n");
-                        GameList.add(new Logs(2,PrintField(FieldGame),date = new Date()));
+                        GameList.get(0).setDeadHeat( GameList.get(0).getDeadHeat()+1 );
+                        GameList.get(1).setDeadHeat( GameList.get(1).getDeadHeat()+1 );
                         CheckWin = true;
                     }
                 }
 
             // Конец игр. Записываем данные о прошедших играх в рейтинг.
             } else if (CheckNew.equals("n")) {
-                System.out.println("Конец игры. Вся статистика записана в файл Result.txt и DetailResult.txt");
-                Logs.WriteFile(GameList);
-            // Архивируем и удаляем старый рейтинг. Игры из текущей сессии сохранятся в архивном файле
+                System.out.println("Конец игры. Вся статистика записана в файл Result.txt");
+                if ((GameList.get(0).getWin()!=0)||(GameList.get(0).getLose()!=0)||(GameList.get(0).getDeadHeat()!=0)){
+                    Logs.WriteFile(GameList);
+                }
+            // Архивируем и удаляем старый рейтинг. Рейтинг из текущей сессии сохранятся в архивном файле
             } else if (CheckNew.equals("r")){
-                Logs.WriteFile(GameList);
+                if ((GameList.get(0).getWin()!=0)||(GameList.get(0).getLose()!=0)||(GameList.get(0).getDeadHeat()!=0)){
+                    Logs.WriteFile(GameList);
+                }
+                //Архивируем рейтинг
                 Logs.Archive();
-                GameList.clear(); // Очищаем текущую сессию от данных об играх
+                // Очищаем текущую сессию от данных
+                GameList.clear();
+                // Создаем игроков снова, чтобы они могли продолжать играть в этой сессии
+                GameList.add(new Logs(NickName1,0,0,0));
+                GameList.add(new Logs(NickName2,0,0,0));
                 System.out.println("Рейтинг заархивирован и result.txt обнулен.");
             // Можно вводить только "y" "n" "r"
             } else {
